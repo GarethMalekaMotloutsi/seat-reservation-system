@@ -224,11 +224,46 @@ function extendHold(email, holdCode, now = Date.now()) {
   };
 }
 
+function joinWaitlist(email, now = Date.now()) {
+  const activeHolds = store.seats.filter(
+    seat =>
+      (seat.status === 'held' || seat.status === 'confirmed') &&
+      seat.email === email
+  );
+
+  if (activeHolds.length > 0) {
+    throw new Error('User already has a reservation');
+  }
+
+  const alreadyWaiting = store.waitlist.some(
+    entry => entry.email === email
+  );
+
+  if (alreadyWaiting) {
+    throw new Error('User is already on the waitlist');
+  }
+
+  const entry = {
+    email,
+    joinedAt: now
+  };
+
+  store.waitlist.push(entry);
+
+  addEvent('waitlist joined', {
+    email
+  });
+
+  return entry;
+}
+
 module.exports = {
   generateHoldCode,
   placeHold,
   expireHolds,
   confirmHold,
   releaseHold,
-    extendHold
+  extendHold,
+  joinWaitlist
+
 };
