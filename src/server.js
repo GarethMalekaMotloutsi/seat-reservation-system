@@ -14,6 +14,8 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(express.json());
+app.use(express.static('public'));
 
 function sendError(res, message, status = 400) {
   res.status(status).json({

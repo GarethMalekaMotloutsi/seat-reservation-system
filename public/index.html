@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seat Reservation System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Seat Reservation System</h1>
+
+    <nav>
+      <button class="nav-button active" data-screen="seats">
+        Seat Map
+      </button>
+
+      <button class="nav-button" data-screen="manage">
+        Manage Hold
+      </button>
+
+      <button class="nav-button" data-screen="events">
+        Event Log
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="seats-screen" class="screen active">
+      <h2>Seat Map</h2>
+      <p>Select an available seat to place a hold.</p>
+
+      <div id="seat-list"></div>
+
+      <div id="hold-form" class="form-box">
+        <h3>Place a Hold</h3>
+
+        <label for="hold-email">Email</label>
+        <input
+          type="email"
+          id="hold-email"
+          placeholder="you@example.com"
+        >
+
+        <label for="selected-seat">Selected Seat</label>
+        <input
+          type="text"
+          id="selected-seat"
+          readonly
+          placeholder="Select a seat"
+        >
+
+        <button id="place-hold-button">
+          Place Hold
+        </button>
+
+        <button id="waitlist-button" class="secondary-button">
+          Join Waitlist
+        </button>
+
+        <p id="seat-message"></p>
+      </div>
+    </section>
+
+    <section id="manage-screen" class="screen">
+      <h2>Manage Hold</h2>
+      <p>Use your email and hold code to manage your reservation.</p>
+
+      <div class="form-box">
+        <label for="manage-email">Email</label>
+        <input
+          type="email"
+          id="manage-email"
+          placeholder="you@example.com"
+        >
+
+        <label for="manage-code">Hold Code</label>
+        <input
+          type="text"
+          id="manage-code"
+          placeholder="6-character code"
+        >
+
+        <div class="action-buttons">
+          <button id="confirm-button">Confirm</button>
+          <button id="extend-button">Extend</button>
+          <button id="release-button">Release</button>
+        </div>
+
+        <p id="manage-message"></p>
+      </div>
+    </section>
+
+    <section id="events-screen" class="screen">
+      <h2>Event Log</h2>
+      <p>View the reservation events recorded by the system.</p>
+
+      <div class="event-filter">
+        <label for="event-seat">Filter by seat</label>
+        <input
+          type="number"
+          id="event-seat"
+          min="1"
+          placeholder="All seats"
+        >
+
+        <button id="event-filter-button">
+          Filter
+        </button>
+
+        <button id="event-clear-button" class="secondary-button">
+          Clear
+        </button>
+      </div>
+
+      <div id="event-list"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
