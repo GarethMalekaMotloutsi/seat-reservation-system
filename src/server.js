@@ -15,6 +15,12 @@ const PORT = 3000;
 
 app.use(express.json());
 
+function sendError(res, message, status = 400) {
+  res.status(status).json({
+    error: message
+  });
+}
+
 app.get('/api/seats', (req, res) => {
   expireHolds();
 
@@ -25,9 +31,10 @@ app.post('/api/holds', (req, res) => {
   const { email, seatNumber } = req.body;
 
   if (!email || !seatNumber) {
-    return res.status(400).json({
-      error: 'Email and seat number are required'
-    });
+    return sendError(
+      res,
+      'Email and seat number are required'
+    );
   }
 
   try {
@@ -35,9 +42,15 @@ app.post('/api/holds', (req, res) => {
 
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({
-      error: error.message
-    });
+    if (error.message === 'Seat does not exist') {
+      return sendError(res, error.message, 404);
+    }
+
+    if (error.message === 'Seat is not available') {
+      return sendError(res, error.message, 409);
+    }
+
+    sendError(res, error.message);
   }
 });
 
@@ -45,9 +58,10 @@ app.post('/api/holds/confirm', (req, res) => {
   const { email, holdCode } = req.body;
 
   if (!email || !holdCode) {
-    return res.status(400).json({
-      error: 'Email and hold code are required'
-    });
+    return sendError(
+      res,
+      'Email and hold code are required'
+    );
   }
 
   try {
@@ -55,9 +69,15 @@ app.post('/api/holds/confirm', (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(400).json({
-      error: error.message
-    });
+    if (error.message === 'Hold code is invalid or has expired') {
+      return sendError(res, error.message, 404);
+    }
+
+    if (error.message === 'Email does not match the hold') {
+      return sendError(res, error.message, 403);
+    }
+
+    sendError(res, error.message);
   }
 });
 
@@ -65,9 +85,10 @@ app.post('/api/holds/release', (req, res) => {
   const { email, holdCode } = req.body;
 
   if (!email || !holdCode) {
-    return res.status(400).json({
-      error: 'Email and hold code are required'
-    });
+    return sendError(
+      res,
+      'Email and hold code are required'
+    );
   }
 
   try {
@@ -75,9 +96,15 @@ app.post('/api/holds/release', (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(400).json({
-      error: error.message
-    });
+    if (error.message === 'Hold code is invalid or has expired') {
+      return sendError(res, error.message, 404);
+    }
+
+    if (error.message === 'Email does not match the hold') {
+      return sendError(res, error.message, 403);
+    }
+
+    sendError(res, error.message);
   }
 });
 
@@ -85,9 +112,10 @@ app.post('/api/holds/extend', (req, res) => {
   const { email, holdCode } = req.body;
 
   if (!email || !holdCode) {
-    return res.status(400).json({
-      error: 'Email and hold code are required'
-    });
+    return sendError(
+      res,
+      'Email and hold code are required'
+    );
   }
 
   try {
@@ -95,9 +123,15 @@ app.post('/api/holds/extend', (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(400).json({
-      error: error.message
-    });
+    if (error.message === 'Hold code is invalid or has expired') {
+      return sendError(res, error.message, 404);
+    }
+
+    if (error.message === 'Email does not match the hold') {
+      return sendError(res, error.message, 403);
+    }
+
+    sendError(res, error.message);
   }
 });
 
@@ -105,9 +139,7 @@ app.post('/api/waitlist', (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json({
-      error: 'Email is required'
-    });
+    return sendError(res, 'Email is required');
   }
 
   try {
@@ -115,9 +147,21 @@ app.post('/api/waitlist', (req, res) => {
 
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({
-      error: error.message
-    });
+    if (
+      error.message ===
+      'Waitlist is only available when all seats are taken'
+    ) {
+      return sendError(res, error.message, 409);
+    }
+
+    if (
+      error.message === 'User already has a reservation' ||
+      error.message === 'User is already on the waitlist'
+    ) {
+      return sendError(res, error.message, 409);
+    }
+
+    sendError(res, error.message);
   }
 });
 
