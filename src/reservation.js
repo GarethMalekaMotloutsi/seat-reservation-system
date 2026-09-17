@@ -184,10 +184,51 @@ function releaseHold(email, holdCode, now = Date.now()) {
   };
 }
 
+function extendHold(email, holdCode, now = Date.now()) {
+  expireHolds(now);
+
+  const seat = store.seats.find(
+    seat => seat.holdCode === holdCode
+  );
+
+  if (!seat) {
+    throw new Error('Hold code is invalid or has expired');
+  }
+
+  if (seat.email !== email) {
+    throw new Error('Email does not match the hold');
+  }
+
+  if (seat.status !== 'held') {
+    throw new Error('Only active holds can be extended');
+  }
+
+  if (seat.extensions >= config.maxExtensions) {
+    throw new Error('Maximum extensions reached');
+  }
+
+  seat.extensions += 1;
+  seat.expiresAt = now + config.holdDuration * 1000;
+
+  addEvent('hold extended', {
+    seatNumber: seat.number,
+    email: seat.email,
+    holdCode: seat.holdCode
+  });
+
+  return {
+    seatNumber: seat.number,
+    holdCode: seat.holdCode,
+    expiresAt: seat.expiresAt,
+    extensions: seat.extensions
+  };
+}
+
 module.exports = {
   generateHoldCode,
   placeHold,
   expireHolds,
   confirmHold,
-  releaseHold
+  releaseHold,
+    extendHold
 };
