@@ -99,11 +99,19 @@ function expireHolds(now = Date.now()) {
     }
   }
 
-  for (const hold of expired) {
-    addEvent('hold expired', hold);
-  }
+for (const hold of expired) {
+  addEvent('hold expired', hold);
 
-  return expired;
+  const seat = store.seats.find(
+    seat => seat.number === hold.seatNumber
+  );
+
+  if (seat) {
+    promoteWaitlist(seat, now);
+  }
+}
+
+return expired;
 }
 
 function confirmHold(email, holdCode, now = Date.now()) {
@@ -172,16 +180,19 @@ function releaseHold(email, holdCode, now = Date.now()) {
   seat.expiresAt = null;
   seat.extensions = 0;
 
-  addEvent('hold released', {
-    seatNumber,
-    email,
-    holdCode
-  });
+addEvent('hold released', {
+  seatNumber,
+  email,
+  holdCode
+});
 
-  return {
-    seatNumber,
-    status: 'available'
-  };
+promoteWaitlist(seat, now);
+
+return {
+  seatNumber: seat.number,
+  status: seat.status
+};
+
 }
 
 function extendHold(email, holdCode, now = Date.now()) {
@@ -257,6 +268,40 @@ function joinWaitlist(email, now = Date.now()) {
   return entry;
 }
 
+function promoteWaitlist(seat, now = Date.now()) {
+  if (seat.status !== 'available' || store.waitlist.length === 0) {
+    return null;
+  }
+
+  const entry = store.waitlist.shift();
+
+  const holdCode = generateHoldCode();
+  const expiresAt = now + config.holdDuration * 1000;
+
+  seat.status = 'held';
+  seat.email = entry.email;
+  seat.holdCode = holdCode;
+  seat.expiresAt = expiresAt;
+  seat.extensions = 0;
+
+  addEvent('waitlist promoted', {
+    seatNumber: seat.number,
+    email: entry.email,
+    holdCode
+  });
+
+  console.log(
+    `Waitlist promotion: ${entry.email} received seat ${seat.number} with hold code ${holdCode}`
+  );
+
+  return {
+    seatNumber: seat.number,
+    email: entry.email,
+    holdCode,
+    expiresAt
+  };
+}
+
 module.exports = {
   generateHoldCode,
   placeHold,
@@ -264,6 +309,8 @@ module.exports = {
   confirmHold,
   releaseHold,
   extendHold,
-  joinWaitlist
+  joinWaitlist,
+  promoteWaitlist
+
 
 };
