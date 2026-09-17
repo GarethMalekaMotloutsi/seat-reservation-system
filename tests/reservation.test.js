@@ -26,7 +26,10 @@ test('hold code has 6 valid characters', () => {
   const result = reservation.placeHold('user1@test.com', 1);
 
   assert.strictEqual(result.holdCode.length, 6);
-  assert.match(result.holdCode, /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
+  assert.match(
+    result.holdCode,
+    /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/
+  );
 });
 
 test('hold codes are unique', () => {
@@ -61,8 +64,17 @@ test('user cannot have more than 2 active holds', () => {
 
 test('user cannot place more than 5 holds in one hour', () => {
   for (let seat = 1; seat <= 5; seat++) {
-    const hold = reservation.placeHold('user1@test.com', seat, 1000);
-    reservation.releaseHold('user1@test.com', hold.holdCode, 1000);
+    const hold = reservation.placeHold(
+      'user1@test.com',
+      seat,
+      1000
+    );
+
+    reservation.releaseHold(
+      'user1@test.com',
+      hold.holdCode,
+      1000
+    );
   }
 
   assert.throws(
@@ -94,19 +106,30 @@ test('confirmation is idempotent', () => {
 });
 
 test('waitlist user is promoted when a seat becomes available', () => {
-  const hold = reservation.placeHold('user1@test.com', 1);
+  for (let seat = 1; seat <= 20; seat++) {
+    reservation.placeHold(
+      `user${seat}@test.com`,
+      seat
+    );
+  }
 
-  reservation.joinWaitlist('user2@test.com');
+  reservation.joinWaitlist('waitlist@test.com');
+
+  const firstHold = store.seats.find(
+    seat => seat.number === 1
+  );
 
   reservation.releaseHold(
     'user1@test.com',
-    hold.holdCode
+    firstHold.holdCode
   );
 
-  const seat = store.seats.find(seat => seat.number === 1);
+  const seat = store.seats.find(
+    seat => seat.number === 1
+  );
 
   assert.strictEqual(seat.status, 'held');
-  assert.strictEqual(seat.email, 'user2@test.com');
+  assert.strictEqual(seat.email, 'waitlist@test.com');
   assert.ok(seat.holdCode);
   assert.strictEqual(store.waitlist.length, 0);
 
@@ -116,4 +139,3 @@ test('waitlist user is promoted when a seat becomes available', () => {
 
   assert.ok(promotionEvent);
 });
-

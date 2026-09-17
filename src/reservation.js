@@ -64,10 +64,10 @@ function placeHold(email, seatNumber, now = Date.now()) {
   });
 
   addEvent('hold placed', {
-  seatNumber: seat.number,
-  email,
-  holdCode
-});
+    seatNumber: seat.number,
+    email,
+    holdCode
+  });
 
   return {
     seatNumber: seat.number,
@@ -99,19 +99,19 @@ function expireHolds(now = Date.now()) {
     }
   }
 
-for (const hold of expired) {
-  addEvent('hold expired', hold);
+  for (const hold of expired) {
+    addEvent('hold expired', hold);
 
-  const seat = store.seats.find(
-    seat => seat.number === hold.seatNumber
-  );
+    const seat = store.seats.find(
+      seat => seat.number === hold.seatNumber
+    );
 
-  if (seat) {
-    promoteWaitlist(seat, now);
+    if (seat) {
+      promoteWaitlist(seat, now);
+    }
   }
-}
 
-return expired;
+  return expired;
 }
 
 function confirmHold(email, holdCode, now = Date.now()) {
@@ -133,7 +133,7 @@ function confirmHold(email, holdCode, now = Date.now()) {
     return {
       seatNumber: seat.number,
       holdCode: seat.holdCode,
-      status: seat.status,
+      status: seat.status
     };
   }
 
@@ -180,19 +180,18 @@ function releaseHold(email, holdCode, now = Date.now()) {
   seat.expiresAt = null;
   seat.extensions = 0;
 
-addEvent('hold released', {
-  seatNumber,
-  email,
-  holdCode
-});
+  addEvent('hold released', {
+    seatNumber,
+    email,
+    holdCode
+  });
 
-promoteWaitlist(seat, now);
+  promoteWaitlist(seat, now);
 
-return {
-  seatNumber: seat.number,
-  status: seat.status
-};
-
+  return {
+    seatNumber,
+    status: seat.status
+  };
 }
 
 function extendHold(email, holdCode, now = Date.now()) {
@@ -236,6 +235,14 @@ function extendHold(email, holdCode, now = Date.now()) {
 }
 
 function joinWaitlist(email, now = Date.now()) {
+  const seatsAvailable = store.seats.some(
+    seat => seat.status === 'available'
+  );
+
+  if (seatsAvailable) {
+    throw new Error('Waitlist is only available when all seats are taken');
+  }
+
   const activeHolds = store.seats.filter(
     seat =>
       (seat.status === 'held' || seat.status === 'confirmed') &&
@@ -311,6 +318,4 @@ module.exports = {
   extendHold,
   joinWaitlist,
   promoteWaitlist
-
-
 };
